@@ -58,6 +58,7 @@ public:
     int  configureWFDDisplay();
     int  teardownHDMIDisplay();
     int  teardownWFDDisplay();
+    void getAttributes(int& width, int& height);
 
 private:
     void setSPDInfo(const char* node, const char* property);

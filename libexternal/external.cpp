@@ -38,6 +38,7 @@
 #include "external.h"
 #include "overlayUtils.h"
 #include "overlay.h"
+#include "mdp_version.h"
 
 using namespace android;
 
@@ -125,7 +126,17 @@ int ExternalDisplay::configureWFDDisplay() {
     }
     setDpyWfdAttr();
     setExternalDisplay(true, mWfdFbNum);
-    return 0;
+    return ret;
+}
+
+void ExternalDisplay::getAttributes(int& width, int& height) {
+    int fps = 0;
+    if(mConnectedFbNum == mHdmiFbNum) {
+        getAttrForMode(width, height, fps);
+    } else {
+        width = mVInfo.xres;
+        height = mVInfo.yres;
+    }
 }
 
 int ExternalDisplay::teardownHDMIDisplay() {
@@ -691,9 +702,30 @@ bool ExternalDisplay::writeHPDOption(int userOption) const
 }
 
 void ExternalDisplay::setDpyWfdAttr() {
-    if(mHwcContext) {
+     if(mHwcContext) {
+        // Always set dpyAttr res to mVInfo res
         mHwcContext->dpyAttr[mExtDpyNum].xres = mVInfo.xres;
         mHwcContext->dpyAttr[mExtDpyNum].yres = mVInfo.yres;
+        mHwcContext->dpyAttr[mExtDpyNum].mDownScaleMode = false;
+        if(!qdutils::MDPVersion::getInstance().is8x26()) {
+            unsigned int priW = mHwcContext->dpyAttr[HWC_DISPLAY_PRIMARY].xres;
+            unsigned int priH = mHwcContext->dpyAttr[HWC_DISPLAY_PRIMARY].yres;
+            // if primary resolution is more than the hdmi resolution
+            // configure dpy attr to primary resolution and set
+            // downscale mode
+            if((priW * priH) > (mVInfo.xres * mVInfo.yres)) {
+                mHwcContext->dpyAttr[mExtDpyNum].xres = priW;
+                mHwcContext->dpyAttr[mExtDpyNum].yres = priH;
+                // HDMI is always in landscape, so always assign the higher
+                // dimension to hdmi's xres
+                if(priH > priW) {
+                    mHwcContext->dpyAttr[mExtDpyNum].xres = priH;
+                    mHwcContext->dpyAttr[mExtDpyNum].yres = priW;
+                }
+                // Set External Display MDP Downscale mode indicator
+                mHwcContext->dpyAttr[mExtDpyNum].mDownScaleMode =true;
+            }
+        }
         mHwcContext->dpyAttr[mExtDpyNum].vsync_period =
                 1000000000l /60;
         ALOGD_IF(DEBUG,"%s: wfd...connected..!",__FUNCTION__);
@@ -703,12 +735,32 @@ void ExternalDisplay::setDpyWfdAttr() {
 void ExternalDisplay::setDpyHdmiAttr() {
     int width = 0, height = 0, fps = 0;
     getAttrForMode(width, height, fps);
-    if(mHwcContext) {
-        ALOGD("ExtDisplay setting xres = %d, yres = %d", width, height);
+     if(mHwcContext) {
+        // Always set dpyAttr res to mVInfo res
         mHwcContext->dpyAttr[HWC_DISPLAY_EXTERNAL].xres = width;
         mHwcContext->dpyAttr[HWC_DISPLAY_EXTERNAL].yres = height;
+        mHwcContext->dpyAttr[HWC_DISPLAY_EXTERNAL].mDownScaleMode = false;
+        if(!qdutils::MDPVersion::getInstance().is8x26()) {
+            unsigned int priW = mHwcContext->dpyAttr[HWC_DISPLAY_PRIMARY].xres;
+            unsigned int priH = mHwcContext->dpyAttr[HWC_DISPLAY_PRIMARY].yres;
+            // if primary resolution is more than the hdmi resolution
+            // configure dpy attr to primary resolution and set
+            // downscale mode
+            if((priW * priH) > (unsigned int)(width * height)) {
+                mHwcContext->dpyAttr[HWC_DISPLAY_EXTERNAL].xres = priW;
+                mHwcContext->dpyAttr[HWC_DISPLAY_EXTERNAL].yres = priH;
+                // HDMI is always in landscape, so always assign the higher
+                // dimension to hdmi's xres
+                if(priH > priW) {
+                    mHwcContext->dpyAttr[HWC_DISPLAY_EXTERNAL].xres = priH;
+                    mHwcContext->dpyAttr[HWC_DISPLAY_EXTERNAL].yres = priW;
+                }
+                // Set External Display MDP Downscale mode indicator
+                mHwcContext->dpyAttr[HWC_DISPLAY_EXTERNAL].mDownScaleMode =true;
+            }
+        }
         mHwcContext->dpyAttr[HWC_DISPLAY_EXTERNAL].vsync_period =
-            1000000000l / fps;
+                1000000000l / fps;
     }
 }
 

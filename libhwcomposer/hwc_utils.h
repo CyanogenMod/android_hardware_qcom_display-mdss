@@ -78,6 +78,8 @@ struct DisplayAttributes {
     // In pause state, composition is bypassed
     // used for WFD displays only
     bool isPause;
+    // External Display is in MDP Downscale mode indicator
+    bool mDownScaleMode;
 };
 
 struct ListStats {
@@ -150,8 +152,12 @@ void getAspectRatioPosition(hwc_context_t* ctx, int dpy, int extOrientation,
 
 bool isPrimaryPortrait(hwc_context_t *ctx);
 
+bool isOrientationPortrait(hwc_context_t *ctx);
+
 void calcExtDisplayPosition(hwc_context_t *ctx,
-                               int dpy, hwc_rect_t& displayFrame);
+                               int dpy,
+                               hwc_rect_t& sourceCrop,
+                               hwc_rect_t& displayFrame);
 
 //Close acquireFenceFds of all layers of incoming list
 void closeAcquireFds(hwc_display_contents_1_t* list);
