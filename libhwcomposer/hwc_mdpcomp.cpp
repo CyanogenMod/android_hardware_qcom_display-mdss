@@ -722,8 +722,16 @@ bool MDPComp::programYUV(hwc_context_t *ctx, hwc_display_contents_1_t* list) {
 
 int MDPComp::prepare(hwc_context_t *ctx, hwc_display_contents_1_t* list) {
 
-    //reset old data
     const int numLayers = ctx->listStats[mDpy].numAppLayers;
+
+    //number of app layers exceeds MAX_NUM_APP_LAYERS fall back to GPU
+    //do not cache the information for next draw cycle.
+    if(numLayers > MAX_NUM_APP_LAYERS) {
+        ALOGD_IF(isDebug(), "%s: Number of App layers exceeded the limit ",
+                 __FUNCTION__);
+        return 0;
+    }
+    //reset old data
     mCurrentFrame.reset(numLayers);
 
     //Hard conditions, if not met, cannot do MDP comp
