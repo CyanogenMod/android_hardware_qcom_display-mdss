@@ -153,8 +153,13 @@ static void handle_uevent(hwc_context_t* ctx, const char* udata, int len)
                 ALOGD("%s sending hotplug: connected = %d and dpy:%d",
                       __FUNCTION__, connected, dpy);
                 ctx->dpyAttr[dpy].connected = false;
+
                 //hwc comp could be on
-                ctx->proc->hotplug(ctx->proc, dpy, connected);
+#ifndef ANDROID_JELLYBEAN_MR1
+                if(dpy != HWC_DISPLAY_VIRTUAL)
+#endif
+                    ctx->proc->hotplug(ctx->proc, dpy, connected);
+
                 break;
             }
         case EXTERNAL_ONLINE:
@@ -172,11 +177,12 @@ static void handle_uevent(hwc_context_t* ctx, const char* udata, int len)
                         {
                             Locker::Autolock _l(ctx->mExtLock);
                             clear(ctx, dpy);
+#ifdef ANDROID_JELLYBEAN_MR1
                             //send hotplug disconnect event
                             ALOGD_IF(UEVENT_DEBUG, "sending hotplug: disconnect"
-                                    "for WFD");
-                            // hwc comp could be on
+                                     "for WFD");
                             ctx->proc->hotplug(ctx->proc, dpy, EXTERNAL_OFFLINE);
+#endif
                         }
                         //Invalidate
                         ctx->proc->invalidate(ctx->proc);
@@ -195,8 +201,14 @@ static void handle_uevent(hwc_context_t* ctx, const char* udata, int len)
                 ALOGD("%s sending hotplug: connected = %d", __FUNCTION__,
                         connected);
                 ctx->dpyAttr[dpy].connected = true;
-                Locker::Autolock _l(ctx->mExtLock); //hwc comp could be on
-                ctx->proc->hotplug(ctx->proc, dpy, connected);
+                Locker::Autolock _l(ctx->mExtLock);
+
+                //hwc comp could be on
+#ifndef ANDROID_JELLYBEAN_MR1
+                if(dpy != HWC_DISPLAY_VIRTUAL)
+#endif
+                    ctx->proc->hotplug(ctx->proc, dpy, connected);
+
                 break;
             }
         case EXTERNAL_PAUSE:
