@@ -28,6 +28,7 @@
 #include <sys/ioctl.h>
 #include <overlay.h>
 #include <overlayRotator.h>
+#include <overlayWriteback.h>
 #include <mdp_version.h>
 #include "hwc_utils.h"
 #include "hwc_fbupdate.h"
@@ -210,6 +211,8 @@ static int hwc_prepare(hwc_composer_device_1 *dev, size_t numDisplays,
 
     ctx->mOverlay->configBegin();
     ctx->mRotMgr->configBegin();
+    overlay::Writeback::configBegin();
+
     Overlay::setDMAMode(Overlay::DMA_LINE_MODE);
 
     for (int32_t i = numDisplays; i >= 0; i--) {
@@ -229,6 +232,7 @@ static int hwc_prepare(hwc_composer_device_1 *dev, size_t numDisplays,
 
     ctx->mOverlay->configDone();
     ctx->mRotMgr->configDone();
+    overlay::Writeback::configDone();
 
     return ret;
 }
@@ -281,6 +285,7 @@ static int hwc_blank(struct hwc_composer_device_1* dev, int dpy, int blank)
         ctx->mOverlay->configBegin();
         ctx->mOverlay->configDone();
         ctx->mRotMgr->clear();
+        overlay::Writeback::clear();
     }
     switch(dpy) {
         case HWC_DISPLAY_PRIMARY:
