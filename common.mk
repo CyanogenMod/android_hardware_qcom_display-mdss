@@ -1,11 +1,11 @@
 #Common headers
-common_includes := hardware/qcom/display/libgralloc
-common_includes += hardware/qcom/display/liboverlay
-common_includes += hardware/qcom/display/libcopybit
-common_includes += hardware/qcom/display/libqdutils
-common_includes += hardware/qcom/display/libhwcomposer
-common_includes += hardware/qcom/display/libexternal
-common_includes += hardware/qcom/display/libqservice
+common_includes := hardware/qcom/display-mdss/libgralloc
+common_includes += hardware/qcom/display-mdss/liboverlay
+common_includes += hardware/qcom/display-mdss/libcopybit
+common_includes += hardware/qcom/display-mdss/libqdutils
+common_includes += hardware/qcom/display-mdss/libhwcomposer
+common_includes += hardware/qcom/display-mdss/libexternal
+common_includes += hardware/qcom/display-mdss/libqservice
 
 ifeq ($(TARGET_USES_POST_PROCESSING),true)
     common_flags     += -DUSES_POST_PROCESSING
@@ -39,9 +39,6 @@ kernel_includes :=
 ifeq ($(TARGET_USES_QCOM_BSP),true)
 # Enable QCOM Display features
     common_flags += -DQCOM_BSP
-endif
-ifneq ($(call is-platform-sdk-version-at-least,18),true)
-    common_flags += -DANDROID_JELLYBEAN_MR1=1
 endif
 ifeq ($(call is-vendor-board-platform,QCOM),true)
 # This check is to pick the kernel headers from the right location.
